@@ -25,8 +25,14 @@ public class GameScreen implements Screen {
     private Texture background;
 
     //world parameters
-    private final int WORLD_WIDTH = 512;
-    private final int WORLD_HEIGHT = 128;
+    private final int WORLD_WIDTH = 1344;
+    private final int WORLD_HEIGHT = 756;
+
+    //game objects
+    Player player;
+
+    //textures
+    Texture playerTexture;
 
     Stage stage;
     Skin skin;
@@ -37,7 +43,7 @@ public class GameScreen implements Screen {
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
         //setting up the textures
-        background = new Texture("background.jpg");
+        background = new Texture("background (1).png");
 
         batch = new SpriteBatch();
 
@@ -48,8 +54,8 @@ public class GameScreen implements Screen {
 
         textField = new TextField("", skin);
         textField.setMessageText("type here ...");
-        textField.setPosition(180,20);
-        textField.setSize(300,50);
+        textField.setPosition(500,35);
+        textField.setSize(340,50);
 
         textField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
@@ -61,6 +67,10 @@ public class GameScreen implements Screen {
             }
         });
         stage.addActor(textField);
+
+        //setting up game objects
+        player = new Player(5, 320, 320, (WORLD_WIDTH - 320)/2, 120, new Texture("tower fire animation.png"),
+                new Texture("hp.png"));
     }
 
     @Override
@@ -70,9 +80,13 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+
+        player.update(delta);
+
         batch.begin();
 
         batch.draw(background,0,0,WORLD_WIDTH,WORLD_HEIGHT);
+        player.draw(batch);
 
         batch.end();
 
