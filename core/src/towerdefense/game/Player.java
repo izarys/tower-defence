@@ -35,9 +35,9 @@ public class Player {
 
         //creating tower animation
         TextureRegion[][] tmpFrames = TextureRegion.split(towerTexture, 320, 320);
-        towerAnimationFrames = new TextureRegion[10];
+        towerAnimationFrames = new TextureRegion[tmpFrames.length*tmpFrames[0].length];
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < tmpFrames.length*tmpFrames[0].length; i++) {
             towerAnimationFrames[i] = tmpFrames[0][i];
         }
 
