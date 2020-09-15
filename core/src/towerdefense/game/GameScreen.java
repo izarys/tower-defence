@@ -2,6 +2,7 @@ package towerdefense.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -35,7 +37,9 @@ public class GameScreen implements Screen {
     //time
     private float timeBetweenEnemySpawns = 2f;
     private float enemySpawnTimer = 0;
+
     private int maxMonsters;
+    private int level=0;
 
     //game objects
     Player player;
@@ -54,9 +58,8 @@ public class GameScreen implements Screen {
     BitmapFont monsterFont;
     String typedWord;
 
-    String dictionary[]={"wind","window","wish","with","require","research",
-            "resource","respond","allow","almost","alone","along","already",
-            "moment","money","monitor","month","mood","parking","paper","orange"};
+    String longWordsDict[];
+    String mediumWordsDict[];
 
     Random random = new Random();
 
@@ -97,6 +100,17 @@ public class GameScreen implements Screen {
         monsterFont = new BitmapFont();
         monsterFont.getData().setScale(1.3f);
        // font.setColor(Color.RED);
+
+        //setting up dictionaries
+        //2k long popular english words
+        FileHandle file = Gdx.files.internal("long_words.txt");
+        String tmpText=file.readString();
+        longWordsDict=tmpText.split("\r\n");
+        //2k medium popular english words
+        file = Gdx.files.internal("medium_words.txt");
+        tmpText=file.readString();
+        mediumWordsDict=tmpText.split("\r\n");
+
 
         //setting up game objects
         player = new Player(5, 320, 320, (WORLD_WIDTH - 320) / 2, 120, new Texture("tower fire animation.png"),
@@ -155,7 +169,10 @@ public class GameScreen implements Screen {
         enemySpawnTimer += delta;
         if (enemySpawnTimer > timeBetweenEnemySpawns) {
             int typeOfMonster = random.nextInt(6);
-            String randomWord=dictionary[random.nextInt(dictionary.length)];
+            String randomWord = mediumWordsDict[random.nextInt(mediumWordsDict.length)];
+            if(level>5) { //TODO
+                randomWord=longWordsDict[random.nextInt(longWordsDict.length)];
+            }
             // 0   1
             // 2   3
             // 4   5
