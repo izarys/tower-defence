@@ -35,11 +35,14 @@ public class GameScreen implements Screen {
     private final int WORLD_HEIGHT = 756;
 
     //time
-    private float timeBetweenEnemySpawns = 2f;
+    private float timeBetweenEnemySpawns = 1.5f;
     private float enemySpawnTimer = 0;
 
-    private int maxMonsters;
-    private int level=0;
+    private int maxMonsters = 5;
+    private int monsterCount = maxMonsters;
+    private int level = 1;
+    private final float levelBreakTime = 2f;
+    private float levelTimeCounter = 0;
 
     //game objects
     Player player;
@@ -56,6 +59,7 @@ public class GameScreen implements Screen {
     Skin skin;
     TextField textField;
     BitmapFont monsterFont;
+    BitmapFont levelFont;
     String typedWord;
 
     String longWordsDict[];
@@ -77,7 +81,7 @@ public class GameScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        typedWord="";
+        typedWord = "";
 
         textField = new TextField("", skin);
         textField.setMessageText("type here ...");
@@ -88,7 +92,7 @@ public class GameScreen implements Screen {
             @Override
             public void keyTyped(TextField textField, char c) {
                 if (c == 13) { // the typed key is ENTER
-                    typedWord=textField.getText();
+                    typedWord = textField.getText();
                     //System.out.println(textField.getText());
                     System.out.println(typedWord);
                     textField.setText("");
@@ -99,17 +103,19 @@ public class GameScreen implements Screen {
 
         monsterFont = new BitmapFont();
         monsterFont.getData().setScale(1.3f);
-       // font.setColor(Color.RED);
+        // font.setColor(Color.RED);
+        levelFont = new BitmapFont();
+        levelFont.getData().setScale(3f);
 
         //setting up dictionaries
         //2k long popular english words
         FileHandle file = Gdx.files.internal("long_words.txt");
-        String tmpText=file.readString();
-        longWordsDict=tmpText.split("\r\n");
+        String tmpText = file.readString();
+        longWordsDict = tmpText.split("\r\n");
         //2k medium popular english words
         file = Gdx.files.internal("medium_words.txt");
-        tmpText=file.readString();
-        mediumWordsDict=tmpText.split("\r\n");
+        tmpText = file.readString();
+        mediumWordsDict = tmpText.split("\r\n");
 
 
         //setting up game objects
@@ -126,52 +132,71 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-
         player.update(delta);
-
         batch.begin();
-
         batch.draw(background, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
         player.draw(batch);
+        if (!levelUpdate(delta)) {
+            levelTimeCounter = 0;
 
-        //enemy
-        spawnEnemyMonsters(delta);
-        //update, move, draw ,delete
-        ListIterator<Enemy> enemyListIterator = enemyMonstersList.listIterator();
-        while (enemyListIterator.hasNext()) {
-            Enemy enemy = enemyListIterator.next();
-            enemy.update(delta);
-            enemy.draw(batch,monsterFont);
-            if(typedWord.equals(enemy.word)) {
-                //TODO dying and shooting
-               // enemy.drawDyingAnimation(batch);
-                enemyListIterator.remove();
-                typedWord="";
-                continue;
+            //enemy update, move, draw, delete
+            spawnEnemyMonster(delta);
+            ListIterator<Enemy> enemyListIterator = enemyMonstersList.listIterator();
+            while (enemyListIterator.hasNext()) {
+                Enemy enemy = enemyListIterator.next();
+                enemy.update(delta);
+                enemy.draw(batch, monsterFont);
+                if(enemy.isDyingAnimationFinished()) {
+                    enemyListIterator.remove();
+                    continue;
+                }
+                if (typedWord.equals(enemy.word)) {
+                    //TODO shooting
+                    //enemyListIterator.remove();
+                    enemy.dying=true;
+                    enemy.elapsedTime=0;
+                    typedWord = "";
+                    continue;
+                }
+                if (moveMonsterAndCheck(enemy, delta)) { //enemy reaches tower
+                    //TODO vanishing
+                    player.lives--;
+                    enemyListIterator.remove();
+                    //remove one tower hp
+                }
             }
-            if (moveMonsterAndCheck(enemy, delta)) { //enemy reaches tower
-                //TODO vanishing
-                player.lives--;
-                enemyListIterator.remove();
-                //remove one tower hp
-            }
+
+            monsterFont.draw(batch, typedWord, 100, 100); //FIXME
         }
-
-        monsterFont.draw(batch,typedWord,100,100); //FIXME
-
         batch.end();
 
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
     }
 
-    private void spawnEnemyMonsters(float delta) {
+    private boolean levelUpdate(float delta) {
+        if (enemyMonstersList.isEmpty() && monsterCount == maxMonsters) {
+            if (levelTimeCounter < levelBreakTime) {
+                levelFont.draw(batch, "LEVEL " + level, 570, 630);
+                levelTimeCounter += delta;
+                return true;
+            }
+            level++;
+            monsterCount = 0;
+            maxMonsters++;
+        }
+        return false;
+    }
+
+    private void spawnEnemyMonster(float delta) {
         enemySpawnTimer += delta;
-        if (enemySpawnTimer > timeBetweenEnemySpawns) {
+        if (enemySpawnTimer > timeBetweenEnemySpawns && monsterCount < maxMonsters) {
+            monsterCount++;
             int typeOfMonster = random.nextInt(6);
             String randomWord = mediumWordsDict[random.nextInt(mediumWordsDict.length)];
-            if(level>5) { //TODO
-                randomWord=longWordsDict[random.nextInt(longWordsDict.length)];
+            if (level > 5) { //TODO
+                randomWord = longWordsDict[random.nextInt(longWordsDict.length)];
             }
             // 0   1
             // 2   3
@@ -183,12 +208,13 @@ public class GameScreen implements Screen {
             Texture dyingTexture = typeOfMonster < 4 ? flyingMonsterTexture : dyingWalkingTexture;
             enemyMonstersList.add(new Enemy(randomWord, positions[typeOfMonster][0], positions[typeOfMonster][1],
                     128, 128, directions[typeOfMonster][0], directions[typeOfMonster][1],
-                    30f, movingTexture,dyingTexture));
-            enemySpawnTimer -= timeBetweenEnemySpawns;
+                    30f, movingTexture, dyingTexture));
+            enemySpawnTimer = 0;
         }
     }
 
     private boolean moveMonsterAndCheck(Enemy enemy, float delta) {
+        if(enemy.dying) return false;
         float leftTowerSide = 624;
         float rightTowerSide = 720;
         //enemy.posX=Math.min(enemy.posX+enemy.directionX*enemy.movementSpeed*delta,WORLD_WIDTH-128);

@@ -20,6 +20,8 @@ public class Enemy {
     float directionY;
     float movementSpeed;
 
+    boolean dying = false;
+
     //graphics
     // Texture monsterTexture;
     Texture movingTexture;
@@ -74,18 +76,23 @@ public class Enemy {
 
     public void draw(Batch batch, BitmapFont font) {
         //batch.draw(monsterTexture, posX, posY);
-        batch.draw((TextureRegion) movingAnimation.getKeyFrame(elapsedTime, true), posX, posY, width, height);
-        font.draw(batch, word, posX + 40, posY + 140);
+        if (!dying) {
+            batch.draw((TextureRegion) movingAnimation.getKeyFrame(elapsedTime, true), posX, posY, width, height);
+            font.draw(batch, word, posX + 40, posY + 140);
+        } else {
+            batch.draw((TextureRegion) dyingAnimation.getKeyFrame(elapsedTime, false), posX, posY, width, height);
+        }
     }
 
-   /* public void drawDyingAnimation(Batch batch) {
-        batch.draw((TextureRegion) dyingAnimation.getKeyFrame(elapsedTime, true), posX, posY, width, height);
-    }*/
+    public boolean isDyingAnimationFinished() {
+        return dying && dyingAnimation.isAnimationFinished(elapsedTime);
+    }
+
+    public void drawDyingAnimation(Batch batch) {
+        batch.draw((TextureRegion) dyingAnimation.getKeyFrame(elapsedTime, false), posX, posY, width, height);
+    }
 
     public void update(float delta) {
         elapsedTime += delta;
-        if (elapsedTime > 10) {
-            elapsedTime = 0;
-        }
     }
 }
