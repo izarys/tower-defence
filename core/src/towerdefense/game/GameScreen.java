@@ -51,8 +51,10 @@ public class GameScreen implements Screen {
     //textures
     Texture playerTexture;
     Texture walkingMonsterTexture = new Texture("monster walk animation.png");
-    Texture flyingMonsterTexture = new Texture("monster fly animation.png");
+    Texture flyingMonsterTexture = new Texture("monster_fly_animation.png");
     Texture dyingWalkingTexture = new Texture("walking dying.png");
+    Texture dyingFlyingTexture = new Texture("flying_dying.png");
+    Texture spawningMonsterTexture=new Texture("spawning_animation.png");
 
     //text
     Stage stage;
@@ -205,19 +207,18 @@ public class GameScreen implements Screen {
             float directions[][] = {{1, -0.35f}, {-1, -0.35f}, {1, -0.12f}, {-1, -0.12f}, {1, 0}, {-1, 0}}; //x,y
 
             Texture movingTexture = typeOfMonster < 4 ? flyingMonsterTexture : walkingMonsterTexture;
-            Texture dyingTexture = typeOfMonster < 4 ? flyingMonsterTexture : dyingWalkingTexture;
+            Texture dyingTexture = typeOfMonster < 4 ? dyingFlyingTexture : dyingWalkingTexture;
             enemyMonstersList.add(new Enemy(randomWord, positions[typeOfMonster][0], positions[typeOfMonster][1],
                     128, 128, directions[typeOfMonster][0], directions[typeOfMonster][1],
-                    30f, movingTexture, dyingTexture));
+                    30f, movingTexture, dyingTexture, spawningMonsterTexture));
             enemySpawnTimer = 0;
         }
     }
 
     private boolean moveMonsterAndCheck(Enemy enemy, float delta) {
-        if(enemy.dying) return false;
+        if(enemy.dying||!enemy.isSpawningAnimationFinished()) return false;
         float leftTowerSide = 624;
         float rightTowerSide = 720;
-        //enemy.posX=Math.min(enemy.posX+enemy.directionX*enemy.movementSpeed*delta,WORLD_WIDTH-128);
         enemy.posX += enemy.directionX * enemy.movementSpeed * delta;
         enemy.posY += enemy.directionY * enemy.movementSpeed * delta;
         if (enemy.posX + 128 >= leftTowerSide && enemy.posX <= rightTowerSide) return true;

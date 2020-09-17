@@ -7,9 +7,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Enemy {
-    //word to guess
     String word;
-    //BitmapFont font = new BitmapFont();
 
     //position bottom left corner
     float posX, posY;
@@ -23,23 +21,21 @@ public class Enemy {
     boolean dying = false;
 
     //graphics
-    // Texture monsterTexture;
-    Texture movingTexture;
-    Texture dyingTexture;
     //TODO
     TextureRegion[] movingAnimationFrames;
     TextureRegion[] dyingAnimationFrames;
-    //  TextureRegion[] spawningAnimationFrames;
+    TextureRegion[] spawningAnimationFrames;
     // TextureRegion[] reachingTowerAnimationFrames;
     Animation movingAnimation;
     Animation dyingAnimation;
+    Animation spawningAnimation;
 
     //time
     float elapsedTime = 0;
 
     public Enemy(String word, float posX, float posY, float width, float height,
                  float directionX, float directionY, float movementSpeed,
-                 Texture movingTexture, Texture dyingTexture) {
+                 Texture movingTexture, Texture dyingTexture, Texture spawningTexture) {
         this.word = word;
         this.posX = posX;
         this.posY = posY;
@@ -48,8 +44,6 @@ public class Enemy {
         this.directionX = directionX;
         this.directionY = directionY;
         this.movementSpeed = movementSpeed;
-        this.movingTexture = movingTexture;
-        this.dyingTexture = dyingTexture;
 
         //walk animation
         TextureRegion[][] tmpFrames = TextureRegion.split(movingTexture, 128, 128);
@@ -72,13 +66,27 @@ public class Enemy {
             }
         }
         dyingAnimation = new Animation(1f / 6f, dyingAnimationFrames);
+
+        //spawn animation
+        tmpFrames = TextureRegion.split(spawningTexture, 128, 128);
+        spawningAnimationFrames = new TextureRegion[tmpFrames.length * tmpFrames[0].length];
+        for (int i = 0; i < tmpFrames.length * tmpFrames[0].length; i++) {
+            spawningAnimationFrames[i] = tmpFrames[0][i];
+            if (posX > 672) {
+                spawningAnimationFrames[i].flip(true, false);
+            }
+        }
+        spawningAnimation = new Animation(1f / 16f, spawningAnimationFrames);
     }
 
     public void draw(Batch batch, BitmapFont font) {
-        //batch.draw(monsterTexture, posX, posY);
         if (!dying) {
-            batch.draw((TextureRegion) movingAnimation.getKeyFrame(elapsedTime, true), posX, posY, width, height);
-            font.draw(batch, word, posX + 40, posY + 140);
+            if(!spawningAnimation.isAnimationFinished(elapsedTime))
+                batch.draw((TextureRegion) spawningAnimation.getKeyFrame(elapsedTime, false), posX, posY, width, height);
+            else {
+                batch.draw((TextureRegion) movingAnimation.getKeyFrame(elapsedTime, true), posX, posY, width, height);
+                font.draw(batch, word, posX + 40, posY + 140);
+            }
         } else {
             batch.draw((TextureRegion) dyingAnimation.getKeyFrame(elapsedTime, false), posX, posY, width, height);
         }
@@ -88,9 +96,10 @@ public class Enemy {
         return dying && dyingAnimation.isAnimationFinished(elapsedTime);
     }
 
-    public void drawDyingAnimation(Batch batch) {
-        batch.draw((TextureRegion) dyingAnimation.getKeyFrame(elapsedTime, false), posX, posY, width, height);
+    public boolean isSpawningAnimationFinished() {
+        return spawningAnimation.isAnimationFinished(elapsedTime);
     }
+
 
     public void update(float delta) {
         elapsedTime += delta;
