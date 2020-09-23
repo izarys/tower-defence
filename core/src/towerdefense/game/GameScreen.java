@@ -49,7 +49,6 @@ public class GameScreen implements Screen {
     LinkedList<Enemy> enemyMonstersList;
 
     //textures
-    Texture playerTexture;
     Texture walkingMonsterTexture = new Texture("monster walk animation.png");
     Texture flyingMonsterTexture = new Texture("monster_fly_animation.png");
     Texture dyingWalkingTexture = new Texture("walking dying.png");
@@ -113,16 +112,17 @@ public class GameScreen implements Screen {
         //2k long popular english words
         FileHandle file = Gdx.files.internal("long_words.txt");
         String tmpText = file.readString();
-        longWordsDict = tmpText.split("\r\n");
+        longWordsDict = tmpText.split("\n");
         //2k medium popular english words
         file = Gdx.files.internal("medium_words.txt");
         tmpText = file.readString();
-        mediumWordsDict = tmpText.split("\r\n");
+        mediumWordsDict = tmpText.split("\n");
 
 
         //setting up game objects
-        player = new Player(5, 320, 320, (WORLD_WIDTH - 320) / 2, 120, new Texture("tower fire animation.png"),
-                new Texture("hp.png"));
+        player = new Player(5, 320, 320, (WORLD_WIDTH - 320) / 2, 120, new Texture("treetower.png"),
+                new Texture("tower wrong word animation.png"), new Texture("tower fire animation.png"),
+                new Texture("hp.png"), new Texture("hp animation.png"));
         enemyMonstersList = new LinkedList<>();
 
     }
@@ -155,6 +155,7 @@ public class GameScreen implements Screen {
                 }
                 if (typedWord.equals(enemy.word)) {
                     //TODO shooting
+                    player.setAnimationMode(true);
                     //enemyListIterator.remove();
                     enemy.dying=true;
                     enemy.elapsedTime=0;
@@ -164,12 +165,18 @@ public class GameScreen implements Screen {
                 if (moveMonsterAndCheck(enemy, delta)) { //enemy reaches tower
                     //TODO vanishing
                     player.lives--;
+                    player.isBubbleAnimationON = true;
                     enemyListIterator.remove();
                     //remove one tower hp
                 }
             }
 
-            monsterFont.draw(batch, typedWord, 100, 100); //FIXME
+            if(!typedWord.equals("")) {
+                player.setAnimationMode(false);
+                typedWord = "";
+            }
+
+            //monsterFont.draw(batch, typedWord, 100, 100); //FIXME
         }
         batch.end();
 
@@ -210,7 +217,7 @@ public class GameScreen implements Screen {
             Texture dyingTexture = typeOfMonster < 4 ? dyingFlyingTexture : dyingWalkingTexture;
             enemyMonstersList.add(new Enemy(randomWord, positions[typeOfMonster][0], positions[typeOfMonster][1],
                     128, 128, directions[typeOfMonster][0], directions[typeOfMonster][1],
-                    30f, movingTexture, dyingTexture, spawningMonsterTexture));
+                    60f, movingTexture, dyingTexture, spawningMonsterTexture));
             enemySpawnTimer = 0;
         }
     }
