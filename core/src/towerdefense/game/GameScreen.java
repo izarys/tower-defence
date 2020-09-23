@@ -49,7 +49,7 @@ public class GameScreen implements Screen {
     LinkedList<Enemy> enemyMonstersList;
 
     //textures
-    Texture walkingMonsterTexture = new Texture("monster walk animation.png");
+    Texture walkingMonsterTexture = new Texture("monster_walk_animation.png");
     Texture flyingMonsterTexture = new Texture("monster_fly_animation.png");
     Texture dyingWalkingTexture = new Texture("walking dying.png");
     Texture dyingFlyingTexture = new Texture("flying_dying.png");
@@ -121,8 +121,8 @@ public class GameScreen implements Screen {
 
         //setting up game objects
         player = new Player(5, 320, 320, (WORLD_WIDTH - 320) / 2, 120, new Texture("treetower.png"),
-                new Texture("tower wrong word animation.png"), new Texture("tower fire animation.png"),
-                new Texture("hp.png"), new Texture("hp animation.png"));
+                new Texture("tower_wrong_word_animation.png"), new Texture("tower_fire_animation.png"),
+                new Texture("hp.png"), new Texture("hp_animation.png"));
         enemyMonstersList = new LinkedList<>();
 
     }
