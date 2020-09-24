@@ -120,7 +120,7 @@ public class GameScreen implements Screen {
 
 
         //setting up game objects
-        player = new Player(5, 320, 320, (WORLD_WIDTH - 320) / 2, 120, new Texture("treetower.png"),
+        player = new Player(5,  (WORLD_WIDTH - 320) / 2, 120, new Texture("treetower.png"),
                 new Texture("tower_wrong_word_animation.png"), new Texture("tower_fire_animation.png"),
                 new Texture("hp.png"), new Texture("hp_animation.png"));
         enemyMonstersList = new LinkedList<>();
@@ -139,7 +139,23 @@ public class GameScreen implements Screen {
         batch.draw(background, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
         player.draw(batch);
-        if (!levelUpdate(delta)) {
+
+        if(player.lives == 0) {
+            ListIterator<Enemy> enemyListIterator = enemyMonstersList.listIterator();
+            while (enemyListIterator.hasNext()) {
+                Enemy enemy = enemyListIterator.next();
+                enemy.draw(batch, monsterFont);
+                if(enemy.isDyingAnimationFinished()) {
+                    enemyListIterator.remove();
+                    continue;
+                }
+
+                levelFont.draw(batch, "GAME OVER", 570, 630);
+
+            }
+        }
+
+        else if (!levelUpdate(delta)) {
             levelTimeCounter = 0;
 
             //enemy update, move, draw, delete
@@ -155,7 +171,7 @@ public class GameScreen implements Screen {
                 }
                 if (typedWord.equals(enemy.word)) {
                     //TODO shooting
-                    player.setAnimationMode(true);
+                    player.getTower().setAnimationMode(true);
                     //enemyListIterator.remove();
                     enemy.dying=true;
                     enemy.elapsedTime=0;
@@ -164,15 +180,14 @@ public class GameScreen implements Screen {
                 }
                 if (moveMonsterAndCheck(enemy, delta)) { //enemy reaches tower
                     //TODO vanishing
-                    player.lives--;
-                    player.isBubbleAnimationON = true;
                     enemyListIterator.remove();
                     //remove one tower hp
+                    player.removeHealthPoint();
                 }
             }
 
             if(!typedWord.equals("")) {
-                player.setAnimationMode(false);
+                player.getTower().setAnimationMode(false);
                 typedWord = "";
             }
 
