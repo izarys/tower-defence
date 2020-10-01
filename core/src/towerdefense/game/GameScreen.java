@@ -22,26 +22,33 @@ import java.util.Random;
 
 public class GameScreen implements Screen {
 
+    TowerDefenseGame game;
+
     //screen
     private Camera camera;
     private Viewport viewport;
 
     //graphics
-    private SpriteBatch batch;
+  //  private SpriteBatch batch;
     private Texture background;
 
     //world parameters
-    private final int WORLD_WIDTH = 1344;
-    private final int WORLD_HEIGHT = 756;
+    private final int WORLD_WIDTH = TowerDefenseGame.WORLD_WIDTH;
+    private final int WORLD_HEIGHT = TowerDefenseGame.WORLD_HEIGHT;
+
+
+    private final int mainMenuButtonX = 908;
+    private final int buttonHeight = 80;
+    private final int buttonWidth = 364;
+    private final int buttonTopY = 656;
 
     //time
-    private float timeBetweenEnemySpawns = 1.5f;
+    private final float timeBetweenEnemySpawns = 1.5f;
     private float enemySpawnTimer = 0;
 
     private int maxMonsters = 5;
     private int monsterCount = maxMonsters;
     private int level = 1;
-    private final float levelBreakTime = 2f;
     private float levelTimeCounter = 0;
 
     //game objects
@@ -61,6 +68,7 @@ public class GameScreen implements Screen {
     TextField textField;
     BitmapFont monsterFont;
     BitmapFont levelFont;
+    BitmapFont buttonsFont;
     String typedWord;
 
     String longWordsDict[];
@@ -68,14 +76,18 @@ public class GameScreen implements Screen {
 
     Random random = new Random();
 
-    GameScreen() {
+    GameScreen(TowerDefenseGame game) {
+
+        this.game=game;
+
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
+
 
         //setting up the textures
         background = new Texture("background.png");
 
-        batch = new SpriteBatch();
+       // batch = new SpriteBatch();
 
         //setting up textField
         stage = new Stage();
@@ -108,15 +120,18 @@ public class GameScreen implements Screen {
         levelFont = new BitmapFont();
         levelFont.getData().setScale(3f);
 
+        buttonsFont = new BitmapFont();
+        buttonsFont.getData().setScale(2f);
+
         //setting up dictionaries
         //2k long popular english words
         FileHandle file = Gdx.files.internal("long_words.txt");
         String tmpText = file.readString();
-        longWordsDict = tmpText.split("\n");
+        longWordsDict = tmpText.split("\r\n");
         //2k medium popular english words
         file = Gdx.files.internal("medium_words.txt");
         tmpText = file.readString();
-        mediumWordsDict = tmpText.split("\n");
+        mediumWordsDict = tmpText.split("\r\n");
 
 
         //setting up game objects
@@ -134,27 +149,24 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        player.update(delta);
-        batch.begin();
-        batch.draw(background, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        game.batch.begin();
+        game.batch.draw(background, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-        player.draw(batch);
+        player.update(delta);
+        player.draw(game.batch);
 
         if(player.lives == 0) {
+            levelFont.draw(game.batch, "GAME OVER", 540, 630);
             ListIterator<Enemy> enemyListIterator = enemyMonstersList.listIterator();
             while (enemyListIterator.hasNext()) {
                 Enemy enemy = enemyListIterator.next();
-                enemy.draw(batch, monsterFont);
+                enemy.draw(game.batch, monsterFont);
                 if(enemy.isDyingAnimationFinished()) {
                     enemyListIterator.remove();
                     continue;
                 }
-
-                levelFont.draw(batch, "GAME OVER", 570, 630);
-
             }
         }
-
         else if (!levelUpdate(delta)) {
             levelTimeCounter = 0;
 
@@ -164,25 +176,21 @@ public class GameScreen implements Screen {
             while (enemyListIterator.hasNext()) {
                 Enemy enemy = enemyListIterator.next();
                 enemy.update(delta);
-                enemy.draw(batch, monsterFont);
+                enemy.draw(game.batch, monsterFont);
                 if(enemy.isDyingAnimationFinished()) {
                     enemyListIterator.remove();
                     continue;
                 }
                 if (typedWord.equals(enemy.word)) {
-                    //TODO shooting
                     player.getTower().setAnimationMode(true);
                     player.shootEnemy(enemy.posX, enemy.posY);
-                    //enemyListIterator.remove();
                     enemy.dying=true;
                     enemy.elapsedTime=0;
                     typedWord = "";
                     continue;
                 }
                 if (moveMonsterAndCheck(enemy, delta)) { //enemy reaches tower
-                    //TODO vanishing
                     enemyListIterator.remove();
-                    //remove one tower hp
                     player.removeHealthPoint();
                 }
             }
@@ -192,9 +200,16 @@ public class GameScreen implements Screen {
                 typedWord = "";
             }
 
-            //monsterFont.draw(batch, typedWord, 100, 100); //FIXME
         }
-        batch.end();
+
+        if (Gdx.input.getX() >= mainMenuButtonX && Gdx.input.getX() < mainMenuButtonX + buttonWidth
+                && Gdx.input.getY() > buttonTopY && Gdx.input.getY() < buttonTopY + buttonHeight) {
+            if (Gdx.input.justTouched()) {
+                game.setScreen(game.menuScreen);
+            }
+        }
+        buttonsFont.draw(game.batch, "Main Menu", 1000, 75);
+        game.batch.end();
 
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
@@ -202,8 +217,8 @@ public class GameScreen implements Screen {
 
     private boolean levelUpdate(float delta) {
         if (enemyMonstersList.isEmpty() && monsterCount == maxMonsters) {
-            if (levelTimeCounter < levelBreakTime) {
-                levelFont.draw(batch, "LEVEL " + level, 570, 630);
+            if (levelTimeCounter < 2f) {
+                levelFont.draw(game.batch, "LEVEL " + level, 570, 630);
                 levelTimeCounter += delta;
                 return true;
             }
@@ -252,7 +267,7 @@ public class GameScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        batch.setProjectionMatrix(camera.combined);
+        game.batch.setProjectionMatrix(camera.combined);
     }
 
     @Override
