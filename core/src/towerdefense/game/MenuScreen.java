@@ -1,7 +1,6 @@
 package towerdefense.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -39,6 +38,7 @@ public class MenuScreen implements Screen {
         titleFont = new BitmapFont();
         titleFont.getData().setScale(5f);
     }
+
 
     @Override
     public void show() {

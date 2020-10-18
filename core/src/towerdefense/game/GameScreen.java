@@ -201,7 +201,6 @@ public class GameScreen implements Screen {
             }
 
         }
-
         if (Gdx.input.getX() >= mainMenuButtonX && Gdx.input.getX() < mainMenuButtonX + buttonWidth
                 && Gdx.input.getY() > buttonTopY && Gdx.input.getY() < buttonTopY + buttonHeight) {
             if (Gdx.input.justTouched()) {
